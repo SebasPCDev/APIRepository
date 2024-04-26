@@ -45,7 +45,7 @@ export class UsersController {
   }
 
   @ApiBearerAuth()
-  @Put('superadmin/:id')
+  @Put('/superadmin/:id')
   @Roles(Role.Superadmin)
   @UseGuards(AuthGuard, RolesGuard)
   @HttpCode(200)
