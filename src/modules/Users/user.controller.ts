@@ -7,12 +7,13 @@ import {
   Param,
   ParseUUIDPipe,
   Put,
+  Request,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '../../guards/auth.guard';
 import { UsersDbService } from './userdb.service';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserAdminDto, UpdateUserDto } from './dto/update-user.dto';
 import { DeletePassAdminInterceptor } from '../../Interceptor/deletePassAdmin.interceptor';
 import { Roles } from '../../decorators/roles.decorator';
 import { Role } from '../Auth/enum/roles.enum';
@@ -27,7 +28,7 @@ export class UsersController {
 
   @ApiBearerAuth()
   @Get()
-  @Roles(Role.Admin)
+  @Roles(Role.Admin, Role.Superadmin)
   @UseGuards(AuthGuard, RolesGuard)
   @HttpCode(200)
   getUsers() {
@@ -36,11 +37,23 @@ export class UsersController {
 
   @ApiBearerAuth()
   @Get(':id')
-  @Roles(Role.Admin, Role.User)
+  @Roles(Role.Admin, Role.User, Role.Superadmin)
   @UseGuards(AuthGuard, RolesGuard)
   @HttpCode(200)
   getUserById(@Param('id', ParseUUIDPipe) id: string) {
     return this.userDbService.getUserById(id);
+  }
+
+  @ApiBearerAuth()
+  @Put('superadmin/:id')
+  @Roles(Role.Superadmin)
+  @UseGuards(AuthGuard, RolesGuard)
+  @HttpCode(200)
+  updateAdminRole(
+    @Param('id') id: string,
+    @Body() updateRole: UpdateUserAdminDto,
+  ) {
+    return this.userDbService.updateRole(id, updateRole);
   }
 
   @ApiBearerAuth()
@@ -54,10 +67,10 @@ export class UsersController {
 
   @ApiBearerAuth()
   @Delete(':id')
-  @Roles(Role.Admin)
+  @Roles(Role.Admin, Role.Superadmin)
   @UseGuards(AuthGuard, RolesGuard)
   @HttpCode(200)
-  deleteUser(@Param('id') id: string) {
-    return this.userDbService.deleteUser(id);
+  deleteUser(@Param('id') idToDelete: string, @Request() req: any) {
+    return this.userDbService.deleteUser(idToDelete, req.user.id);
   }
 }

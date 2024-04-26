@@ -9,6 +9,7 @@ import {
   Length,
   //Validate,
 } from 'class-validator';
+import { Role } from 'src/modules/Auth/enum/roles.enum';
 
 //import { MatchPassword } from 'src/modules/decorators/matchPassword.decorator';
 
@@ -94,7 +95,7 @@ export class CreateUserDto {
    */
   @ApiHideProperty()
   @IsEmpty()
-  admin: boolean;
+  role: string;
 }
 
 export class LoginUserDto {

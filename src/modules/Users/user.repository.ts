@@ -1,9 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../../Entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserAdminDto, UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -60,20 +64,54 @@ export class UserRepository {
     return user;
   }
 
-  async deleteUser(id: string) {
-    const user = await this.userRepository.findOne({ where: { id } });
-    if (!user) {
-      return { message: 'User not found' };
+  async deleteUser(idToDelete: string, userIdRequest: string) {
+    const userToDelete = await this.userRepository.findOne({
+      where: { id: idToDelete },
+    });
+    const userRequested = await this.userRepository.findOne({
+      where: { id: userIdRequest },
+    });
+    //superadmin permissions
+    if (userRequested.role === 'superadmin') {
+      if (!userToDelete) {
+        throw new NotFoundException('User not found');
+      }
+      await this.userRepository.delete(idToDelete);
+      return { message: `User ${userToDelete.name} deleted` };
     }
-    if (user.admin === true) {
-      return { message: 'Admin user cannot be deleted' };
+    //admin permissions
+    if (
+      userRequested.role === 'admin' &&
+      (userToDelete.role === 'admin' || userToDelete.role === 'superadmin')
+    ) {
+      throw new BadRequestException(
+        'Superadmin and Admin cannot be deleted by Admin',
+      );
     }
-    await this.userRepository.delete(id);
-    return { message: `User ${user.name} deleted` };
+
+    if (userToDelete.role === 'user') {
+      if (!userToDelete) {
+        throw new NotFoundException('User not found');
+      }
+      await this.userRepository.delete(idToDelete);
+      return { message: `User ${userToDelete.name} deleted` };
+    }
   }
 
   async getUserByEmail(email: string) {
     return await this.userRepository.findOne({ where: { email } });
+  }
+
+  async updateRole(id: string, user: UpdateUserAdminDto) {
+    const userFind = await this.userRepository.findOne({ where: { id } });
+    if (!userFind) {
+      return { message: 'User not found' };
+    }
+
+    if (user.role === 'user' || user.role === 'admin') {
+      await this.userRepository.update(id, user);
+      return await this.userRepository.findOne({ where: { id } });
+    }
   }
 
   async preloadAdminUser() {
@@ -86,7 +124,7 @@ export class UserRepository {
       phone: 1234567,
       country: 'USA',
       city: 'New York',
-      admin: true,
+      role: 'superadmin',
     };
 
     console.log('Loading database...');

@@ -9,6 +9,7 @@ import { User } from '../../Entities/user.entity';
 import { Order } from '../../Entities/order.entity';
 import { Product } from '../../Entities/product.entity';
 import { OrderDetail } from '../../Entities/orderdetail.entity';
+import { CreateOrderDto } from './dto/create-order.dto';
 
 @Injectable()
 export class OrdersRepository {
@@ -20,20 +21,39 @@ export class OrdersRepository {
     private orderDetailRepository: Repository<OrderDetail>,
   ) {}
 
-  async addOrder(createOrderDto) {
-    const { id, products } = createOrderDto;
+  async generateOrder() {}
+
+  async addOrder(createOrderDto: CreateOrderDto, userRequest: any) {
+    const userFinded = await this.userRepository.findOne({
+      where: { id: createOrderDto.id },
+    });
+
+    //Verificamos que el usuario exista
+    if (!userFinded) throw new NotFoundException('User not found');
+
+    //Verificamos que un usuario no pueda crear una orden para otro usuario.
+    if (
+      userRequest.role.includes('user') &&
+      userRequest.id !== createOrderDto.id
+    ) {
+      throw new BadRequestException('You can only create orders for yourself');
+    }
+    //Vericicamos que un admin no pueda crear una orden para un superadmin
+    if (
+      userRequest.role.includes('admin') &&
+      userFinded.role === 'superadmin'
+    ) {
+      throw new BadRequestException(
+        'Admins cannot create orders for superadmins',
+      );
+    }
+
+    const { products } = createOrderDto;
 
     const hasID = products.every(
       (element) => element.id !== undefined && element.id.length === 36,
     );
-
     if (!hasID) throw new BadRequestException('Product ID invalid');
-
-    const userFinded = await this.userRepository.findOne({
-      where: { id },
-    });
-
-    if (!userFinded) return 'User not found';
 
     console.log(products.map((element) => element.id));
 

@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { v4 as uuidd } from 'uuid';
 import { Order } from './order.entity';
+import { Role } from 'src/modules/Auth/enum/roles.enum';
 
 @Entity({
   name: 'users',
@@ -47,8 +48,8 @@ export class User {
   })
   city: string;
 
-  @Column({ default: false })
-  admin: boolean;
+  @Column({ enum: Role, default: 'user' })
+  role: string;
 
   //! Relación 1:N con la entidad Order (Un usuario puede tener muchos pedidos)
   @OneToMany(() => Order, (order) => order.user)

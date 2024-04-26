@@ -3,7 +3,7 @@ import { Product } from 'src/Entities/product.entity';
 
 export class CreateOrderDto {
   /**
-   * El id debe ser un UUID. Se genera automáticamente al crear un nuevo pedido.
+   * El id debe ser un UUID. Debe ser el ID de la persona que genera el pedido.
    * @example '123e4567-e89b-12d3-a456-426614174000'
    */
   @IsNotEmpty()

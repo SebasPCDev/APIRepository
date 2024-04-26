@@ -58,7 +58,7 @@ export class AuthRepository {
       sub: user.id,
       id: user.id,
       username: credentials.email.toLowerCase(),
-      role: [user.admin ? Role.Admin : Role.User],
+      role: [user.role],
     };
     const token = this.JwtService.sign(userPayload);
 

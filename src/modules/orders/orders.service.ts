@@ -7,8 +7,8 @@ import { OrdersRepository } from './orders.repository';
 export class OrdersService {
   constructor(private readonly ordersRepository: OrdersRepository) {}
 
-  addOrder(createOrderDto: CreateOrderDto) {
-    return this.ordersRepository.addOrder(createOrderDto);
+  addOrder(createOrderDto: CreateOrderDto, userRequest: any) {
+    return this.ordersRepository.addOrder(createOrderDto, userRequest);
   }
 
   getOrders(id: string) {

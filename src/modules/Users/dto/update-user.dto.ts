@@ -1,6 +1,8 @@
 import {
   IsEmail,
   IsEmpty,
+  IsEnum,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
@@ -80,5 +82,12 @@ export class UpdateUserDto {
    * El rol debe ser un booleano.
    */
   @IsEmpty()
-  admin: boolean;
+  role: string;
+}
+
+export class UpdateUserAdminDto {
+  @IsString()
+  @IsNotEmpty()
+  @IsEnum(['user', 'admin'], { message: 'Role must be user or admin' })
+  role: string;
 }
